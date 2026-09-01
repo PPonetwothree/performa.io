@@ -1,17 +1,17 @@
-# Netlify Deployment Configuration for Performa.io
+# Netlify Build Configuration for Performa.io
 
 [build]
   base = "frontend"
-  publish = "dist"
   command = "npm run build"
+  publish = "dist"
 
-# Single-Page Application (SPA) Redirect Rule
+# Single-Page Application (SPA) Client Routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
-# Security & Optimization Headers
+# Security & Cache Headers
 [[headers]]
   for = "/*"
   [headers.values]
