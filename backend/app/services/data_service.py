@@ -96,8 +96,7 @@ class DataService:
 
     def load_default_data(self):
         if not DEFAULT_DATASET_PATH.exists():
-            from backend.data.build_dataset import generate_kaggle_superstore_dataset
-            generate_kaggle_superstore_dataset(str(DEFAULT_DATASET_PATH))
+            raise FileNotFoundError(f"Default dataset not found at {DEFAULT_DATASET_PATH}")
             
         raw_df = pd.read_csv(DEFAULT_DATASET_PATH)
         mapped, missing = self._map_columns(list(raw_df.columns))

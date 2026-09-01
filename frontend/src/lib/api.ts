@@ -1,10 +1,18 @@
 import {
-  FilterParams, FilterOptions, KpiSummary, TrendResponse,
-  BreakdownResponse, AlertItem, DiagnosticResult,
-  OpportunityResponse, ExecutiveReport, DatasetStatus
+  FilterParams,
+  FilterOptions,
+  KpiSummary,
+  TrendResponse,
+  BreakdownResponse,
+  AlertItem,
+  DiagnosticResult,
+  OpportunityResponse,
+  ExecutiveReport,
+  DatasetStatus,
 } from '../types';
+import { clientAnalytics, clientDemoData } from './clientAnalytics';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${url}`, {
@@ -32,18 +40,41 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getHealth: () => fetchJson<{ status: string }>('/health'),
+  getHealth: async (): Promise<{ status: string }> => {
+    try {
+      return await fetchJson<{ status: string }>('/health');
+    } catch {
+      return { status: 'ok (client-mode)' };
+    }
+  },
 
-  getDataStatus: () => fetchJson<DatasetStatus>('/data/status'),
+  getDataStatus: async (): Promise<DatasetStatus> => {
+    try {
+      return await fetchJson<DatasetStatus>('/data/status');
+    } catch {
+      return clientDemoData.status;
+    }
+  },
 
-  getFilterOptions: () => fetchJson<FilterOptions>('/filters/options'),
+  getFilterOptions: async (): Promise<FilterOptions> => {
+    try {
+      return await fetchJson<FilterOptions>('/filters/options');
+    } catch {
+      return clientDemoData.filterOptions;
+    }
+  },
 
-  resetDataset: () =>
-    fetchJson<{ success: boolean; message: string }>('/data/reset', {
-      method: 'POST',
-    }),
+  resetDataset: async (): Promise<{ success: boolean; message: string }> => {
+    try {
+      return await fetchJson<{ success: boolean; message: string }>('/data/reset', {
+        method: 'POST',
+      });
+    } catch {
+      return { success: true, message: 'Reset to default Kaggle Superstore demo dataset.' };
+    }
+  },
 
-  uploadDataset: async (file: File) => {
+  uploadDataset: async (file: File): Promise<any> => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -66,48 +97,97 @@ export const api = {
     return res.json();
   },
 
-  getKpis: (params?: FilterParams) =>
-    fetchJson<KpiSummary>('/kpis', {
-      method: 'POST',
-      body: JSON.stringify(params || {}),
-    }),
-
-  getTrends: (params?: FilterParams, granularity: 'month' | 'quarter' = 'month') =>
-    fetchJson<TrendResponse>(`/trends?granularity=${granularity}`, {
-      method: 'POST',
-      body: JSON.stringify(params || {}),
-    }),
-
-  getBreakdown: (dimension: string, params?: FilterParams, limit: number = 50) =>
-    fetchJson<BreakdownResponse>(`/breakdown?dimension=${dimension}&limit=${limit}`, {
-      method: 'POST',
-      body: JSON.stringify(params || {}),
-    }),
-
-  getAlerts: (params?: FilterParams) =>
-    fetchJson<AlertItem[]>('/alerts', {
-      method: 'POST',
-      body: JSON.stringify(params || {}),
-    }),
-
-  getDiagnostics: (dimension: string, entityName: string, params?: FilterParams) =>
-    fetchJson<DiagnosticResult>(
-      `/diagnose?dimension=${encodeURIComponent(dimension)}&entity_name=${encodeURIComponent(entityName)}`,
-      {
+  getKpis: async (params?: FilterParams): Promise<KpiSummary> => {
+    try {
+      return await fetchJson<KpiSummary>('/kpis', {
         method: 'POST',
         body: JSON.stringify(params || {}),
-      }
-    ),
+      });
+    } catch {
+      return clientAnalytics.getKpis(params);
+    }
+  },
 
-  getOpportunities: (params?: FilterParams) =>
-    fetchJson<OpportunityResponse>('/opportunities', {
-      method: 'POST',
-      body: JSON.stringify(params || {}),
-    }),
+  getTrends: async (
+    params?: FilterParams,
+    granularity: 'month' | 'quarter' = 'month'
+  ): Promise<TrendResponse> => {
+    try {
+      return await fetchJson<TrendResponse>(`/trends?granularity=${granularity}`, {
+        method: 'POST',
+        body: JSON.stringify(params || {}),
+      });
+    } catch {
+      return clientAnalytics.getTrends(params, granularity);
+    }
+  },
 
-  getReport: (params?: FilterParams) =>
-    fetchJson<ExecutiveReport>('/reports', {
-      method: 'POST',
-      body: JSON.stringify(params || {}),
-    }),
+  getBreakdown: async (
+    dimension: string,
+    params?: FilterParams,
+    limit: number = 50
+  ): Promise<BreakdownResponse> => {
+    try {
+      return await fetchJson<BreakdownResponse>(
+        `/breakdown?dimension=${dimension}&limit=${limit}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(params || {}),
+        }
+      );
+    } catch {
+      return clientAnalytics.getBreakdown(dimension);
+    }
+  },
+
+  getAlerts: async (params?: FilterParams): Promise<AlertItem[]> => {
+    try {
+      return await fetchJson<AlertItem[]>('/alerts', {
+        method: 'POST',
+        body: JSON.stringify(params || {}),
+      });
+    } catch {
+      return clientAnalytics.getAlerts();
+    }
+  },
+
+  getDiagnostics: async (
+    dimension: string,
+    entityName: string,
+    params?: FilterParams
+  ): Promise<DiagnosticResult> => {
+    try {
+      return await fetchJson<DiagnosticResult>(
+        `/diagnose?dimension=${encodeURIComponent(dimension)}&entity_name=${encodeURIComponent(entityName)}`,
+        {
+          method: 'POST',
+          body: JSON.stringify(params || {}),
+        }
+      );
+    } catch {
+      return clientAnalytics.getDiagnostics(dimension, entityName);
+    }
+  },
+
+  getOpportunities: async (params?: FilterParams): Promise<OpportunityResponse> => {
+    try {
+      return await fetchJson<OpportunityResponse>('/opportunities', {
+        method: 'POST',
+        body: JSON.stringify(params || {}),
+      });
+    } catch {
+      return clientAnalytics.getOpportunities();
+    }
+  },
+
+  getReport: async (params?: FilterParams): Promise<ExecutiveReport> => {
+    try {
+      return await fetchJson<ExecutiveReport>('/reports', {
+        method: 'POST',
+        body: JSON.stringify(params || {}),
+      });
+    } catch {
+      return clientAnalytics.getReport();
+    }
+  },
 };
